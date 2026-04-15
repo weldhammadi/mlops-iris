@@ -1,11 +1,11 @@
 """
 Model training script for MLOps project
-Trains a classifier on the Iris dataset and saves the model
+Trains a classifier on the Wine dataset and saves the model
 """
 
 import pickle
 import pandas as pd
-from sklearn.datasets import load_iris
+from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, f1_score, confusion_matrix
@@ -16,10 +16,10 @@ MODEL_PATH = "model.pkl"
 DATA_DIR = "data"
 
 def load_data():
-    """Load Iris dataset"""
-    iris = load_iris()
-    X = pd.DataFrame(iris.data, columns=iris.feature_names)
-    y = pd.Series(iris.target, name='target')
+    """Load Wine dataset"""
+    wine = load_wine()
+    X = pd.DataFrame(wine.data, columns=wine.feature_names)
+    y = pd.Series(wine.target, name='target')
     return X, y
 
 def preprocess_data(X, y):
@@ -66,7 +66,7 @@ def main():
     print("Starting model training pipeline...")
 
     # Load data
-    print("Loading Iris dataset...")
+    print("Loading Wine dataset...")
     X, y = load_data()
     print(f"✓ Loaded {X.shape[0]} samples with {X.shape[1]} features")
 

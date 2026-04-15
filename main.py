@@ -15,7 +15,7 @@ MODEL_PATH = "model.pkl"
 # Create FastAPI app
 app = FastAPI(
     title="MLOps Model Server",
-    description="Iris classifier prediction API",
+    description="Wine classifier prediction API",
     version="1.0.0"
 )
 
@@ -43,35 +43,53 @@ async def startup_event():
 # Pydantic models for request/response
 class PredictionRequest(BaseModel):
     """Request model for prediction endpoint"""
-    sepal_length: float
-    sepal_width: float
-    petal_length: float
-    petal_width: float
+    alcohol: float
+    malic_acid: float
+    ash: float
+    alcalinity_of_ash: float
+    magnesium: float
+    total_phenols: float
+    flavanoids: float
+    nonflavanoid_phenols: float
+    proanthocyanins: float
+    color_intensity: float
+    hue: float
+    od280_od315_of_diluted_wines: float
+    proline: float
 
     class Config:
         example = {
-            "sepal_length": 5.1,
-            "sepal_width": 3.5,
-            "petal_length": 1.4,
-            "petal_width": 0.2
+            "alcohol": 13.0,
+            "malic_acid": 2.34,
+            "ash": 2.36,
+            "alcalinity_of_ash": 19.5,
+            "magnesium": 99.7,
+            "total_phenols": 2.30,
+            "flavanoids": 2.03,
+            "nonflavanoid_phenols": 0.36,
+            "proanthocyanins": 1.59,
+            "color_intensity": 5.06,
+            "hue": 0.96,
+            "od280_od315_of_diluted_wines": 2.61,
+            "proline": 746.0
         }
 
 class PredictionResponse(BaseModel):
     """Response model for prediction endpoint"""
     prediction: int
     confidence: float
-    iris_species: str
+    wine_class: str
 
 class HealthResponse(BaseModel):
     """Response model for health endpoint"""
     status: str
     model_loaded: bool
 
-# Iris species mapping
-IRIS_SPECIES = {
-    0: "Setosa",
-    1: "Versicolor",
-    2: "Virginica"
+# Wine class mapping
+WINE_CLASSES = {
+    0: "Class 0",
+    1: "Class 1",
+    2: "Class 2"
 }
 
 @app.get("/health", response_model=HealthResponse)
@@ -87,7 +105,7 @@ async def predict(request: PredictionRequest):
     """
     Prediction endpoint
 
-    Takes iris flower measurements and returns the predicted species
+    Takes wine chemical measurements and returns the predicted wine class
     """
     if model is None:
         raise HTTPException(
@@ -97,29 +115,40 @@ async def predict(request: PredictionRequest):
 
     # Prepare input features
     features = np.array([[
-        request.sepal_length,
-        request.sepal_width,
-        request.petal_length,
-        request.petal_width
+        request.alcohol,
+        request.malic_acid,
+        request.ash,
+        request.alcalinity_of_ash,
+        request.magnesium,
+        request.total_phenols,
+        request.flavanoids,
+        request.nonflavanoid_phenols,
+        request.proanthocyanins,
+        request.color_intensity,
+        request.hue,
+        request.od280_od315_of_diluted_wines,
+        request.proline
     ]])
 
     # Normalize features (same as training)
-    # Note: In production, use a fitted scaler saved with the model
-    # For this exercise, we use hardcoded training set stats
-    feature_means = np.array([5.843333, 3.054, 3.758667, 1.198667])
-    feature_stds = np.array([0.816497, 0.432877, 1.758047, 0.763161])
+    feature_means = np.array([13.0006, 2.3363, 2.3665, 19.4949, 99.7416,
+                               2.2951, 2.0293, 0.3619, 1.5909, 5.0581,
+                               0.9574, 2.6117, 746.8933])
+    feature_stds = np.array([0.8118, 1.1171, 0.2743, 3.3396, 14.2825,
+                              0.6257, 0.9989, 0.1244, 0.5726, 2.3183,
+                              0.2285, 0.7099, 314.9075])
     features_scaled = (features - feature_means) / feature_stds
 
     # Make prediction
     prediction = model.predict(features_scaled)[0]
     probabilities = model.predict_proba(features_scaled)[0]
     confidence = float(np.max(probabilities))
-    species = IRIS_SPECIES[prediction]
+    wine_class = WINE_CLASSES[prediction]
 
     return PredictionResponse(
         prediction=int(prediction),
         confidence=confidence,
-        iris_species=species
+        wine_class=wine_class
     )
 
 if __name__ == "__main__":
