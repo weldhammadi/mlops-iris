@@ -25,7 +25,7 @@ jobs:
         run: python train.py
 
       - name: Upload model artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: model
           path: model.pkl
